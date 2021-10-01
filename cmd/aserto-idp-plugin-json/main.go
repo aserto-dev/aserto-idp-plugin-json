@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/aserto-dev/idp-plugin-sdk/examples/json/pkg/srv"
+	"github.com/aserto-dev/aserto-idp-plugin-json/pkg/srv"
 	"github.com/aserto-dev/idp-plugin-sdk/plugin"
 )
 
