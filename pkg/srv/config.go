@@ -26,6 +26,11 @@ type JsonPluginConfig struct {
 }
 
 func (c *JsonPluginConfig) Validate() error {
+
+	if c.File == "" {
+		return status.Error(codes.InvalidArgument, "no json file name was provided")
+	}
+
 	dir := filepath.Dir(c.File)
 
 	info, err := os.Stat(dir)
