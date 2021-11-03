@@ -94,7 +94,8 @@ func (s *JsonPlugin) Write(user *api.User) error {
 func (s *JsonPlugin) Delete(userId string) error {
 	for i := len(s.jsonContent) - 1; i >= 0; i-- {
 		if s.jsonContent[i]["id"].(string) == userId {
-			s.jsonContent = append(s.jsonContent[:i], s.jsonContent[i+1:]...)
+			s.jsonContent[i]["deleted"] = true
+			break
 		}
 	}
 	return nil
