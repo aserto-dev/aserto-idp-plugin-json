@@ -1,19 +1,36 @@
 package srv
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
+	"os"
 
 	api "github.com/aserto-dev/go-grpc/aserto/api/v1"
+	"github.com/aserto-dev/idp-plugin-sdk/pb"
 	"github.com/aserto-dev/idp-plugin-sdk/plugin"
+	"github.com/hashicorp/go-multierror"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
+var jsonOptions = protojson.MarshalOptions{
+	Multiline:       false,
+	Indent:          "  ",
+	AllowPartial:    true,
+	UseProtoNames:   true,
+	UseEnumNumbers:  false,
+	EmitUnpopulated: false,
+}
+
 type JsonPlugin struct {
-	Config      *JsonPluginConfig
-	op          plugin.OperationType
-	jsonContent []map[string]interface{}
+	Config   *JsonPluginConfig
+	decoder  *json.Decoder
+	users    bytes.Buffer
+	op       plugin.OperationType
+	apiUsers []*api.User
+	count    int
 }
 
 func NewJsonPlugin() *JsonPlugin {
@@ -32,89 +49,129 @@ func (s *JsonPlugin) Open(cfg plugin.PluginConfig, operation plugin.OperationTyp
 		return errors.New("invalid config")
 	}
 	s.Config = config
+	s.count = 0
+
 	s.op = operation
 	switch operation {
 	case plugin.OperationTypeWrite:
 		{
-			s.jsonContent = make([]map[string]interface{}, 0)
+			s.users.Write([]byte("[\n"))
 		}
 	case plugin.OperationTypeRead, plugin.OperationTypeDelete:
 		{
-			file, err := ioutil.ReadFile(s.Config.File)
+			file, err := os.Open(s.Config.File)
 			if err != nil {
 				return err
 			}
-			err = json.Unmarshal(file, &s.jsonContent)
-			if err != nil {
+
+			s.decoder = json.NewDecoder(file)
+
+			if _, err = s.decoder.Token(); err != nil {
 				return err
 			}
+
 		}
 	}
+
 	return nil
 }
 
 func (s *JsonPlugin) Read() ([]*api.User, error) {
-	var user api.User
-	if len(s.jsonContent) == 0 {
+	if s.decoder.More() {
+		u := api.User{}
+		if err := pb.UnmarshalNext(s.decoder, &u); err != nil {
+			return nil, err
+		}
+
+		return []*api.User{&u}, nil
+	} else {
+		if _, err := s.decoder.Token(); err != nil {
+			return nil, err
+		}
+
 		return nil, io.EOF
 	}
-
-	u, err := json.Marshal(s.jsonContent[0])
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(u, &user)
-	if err != nil {
-		return nil, err
-	}
-
-	s.jsonContent = s.jsonContent[1:]
-
-	return []*api.User{&user}, nil
 }
 
 func (s *JsonPlugin) Write(user *api.User) error {
-	var userInterface map[string]interface{}
-	u, err := json.Marshal(user)
+	if s.count != 0 {
+		_, _ = s.users.Write([]byte(",\n"))
+	}
+	b, err := jsonOptions.Marshal(user)
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal(u, &userInterface)
-	if err != nil {
+	if _, err := s.users.Write(b); err != nil {
 		return err
 	}
-
-	s.jsonContent = append(s.jsonContent, userInterface)
+	s.count++
 
 	return nil
 }
 
 func (s *JsonPlugin) Delete(userId string) error {
-	for i := len(s.jsonContent) - 1; i >= 0; i-- {
-		if s.jsonContent[i]["id"].(string) == userId {
-			s.jsonContent[i]["deleted"] = true
-			break
+
+	var err error
+	if len(s.apiUsers) > 0 {
+		err = s.readAll()
+	}
+
+	for _, user := range s.apiUsers {
+		if user.Id == userId {
+			user.Deleted = true
 		}
 	}
-	return nil
+
+	return err
 }
 
 func (s *JsonPlugin) Close() error {
 	switch s.op {
 	case plugin.OperationTypeWrite, plugin.OperationTypeDelete:
 		{
-			fileContent, err := json.Marshal(s.jsonContent)
+			if s.op == plugin.OperationTypeDelete {
+				s.users.Reset()
+				s.users.Write([]byte("[\n"))
+
+				for _, user := range s.apiUsers {
+					err := s.Write(user)
+					if err != nil {
+						return err
+					}
+				}
+			}
+			_, err := s.users.Write([]byte("\n]\n"))
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile(s.Config.File, fileContent, 0644)
+			f, err := os.Create(s.Config.File)
 			if err != nil {
 				return err
 			}
+			w := bufio.NewWriter(f)
+			_, err = s.users.WriteTo(w)
+			if err != nil {
+				return err
+			}
+			w.Flush()
 		}
 	}
-
 	return nil
+}
+
+func (s *JsonPlugin) readAll() error {
+	var errs error
+	users, err := s.Read()
+	for err != io.EOF {
+		if err != nil {
+			errs = multierror.Append(errs, err)
+			continue
+		}
+
+		s.apiUsers = append(s.apiUsers, users...)
+		users, err = s.Read()
+	}
+
+	return errs
 }
