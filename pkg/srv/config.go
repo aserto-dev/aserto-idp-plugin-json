@@ -3,9 +3,8 @@ package srv
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 
-	"golang.org/x/sys/unix"
+	fileaccess "github.com/aserto-dev/aserto-idp-plugin-json/pkg/file-access"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -31,25 +30,31 @@ func (c *JsonPluginConfig) Validate() error {
 		return status.Error(codes.InvalidArgument, "no json file name was provided")
 	}
 
-	dir := filepath.Dir(c.File)
+	// check if file already exists
+	path, err := os.Stat(c.File)
 
-	info, err := os.Stat(dir)
 	if err != nil {
-		return status.Error(codes.NotFound, err.Error())
-	}
 
-	if !info.IsDir() {
-		return status.Errorf(codes.InvalidArgument, "%s is not a directory", dir)
-	}
+		dir := filepath.Dir(c.File)
 
-	if runtime.GOOS == "windows" {
-		if info.Mode().Perm()&(1<<(uint(7))) == 0 {
+		info, err := os.Stat(dir)
+		if err != nil {
+			return status.Error(codes.NotFound, err.Error())
+		}
+
+		if !info.IsDir() {
+			return status.Errorf(codes.InvalidArgument, "%s is not a directory", dir)
+		}
+
+		err = fileaccess.WriteAccess(info, dir)
+		if err != nil {
 			return status.Errorf(codes.PermissionDenied, "cannot access %s", dir)
 		}
+
 	} else {
-		err = unix.Access(dir, unix.W_OK)
+		err = fileaccess.WriteAccess(path, c.File)
 		if err != nil {
-			return status.Errorf(codes.PermissionDenied, "cannot access %s: %s", dir, err.Error())
+			return status.Errorf(codes.PermissionDenied, "cannot access %s", c.File)
 		}
 	}
 

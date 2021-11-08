@@ -113,7 +113,7 @@ func (s *JsonPlugin) Write(user *api.User) error {
 func (s *JsonPlugin) Delete(userId string) error {
 
 	var err error
-	if len(s.apiUsers) > 0 {
+	if len(s.apiUsers) == 0 {
 		err = s.readAll()
 	}
 
