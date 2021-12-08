@@ -126,7 +126,7 @@ func (s *JsonPlugin) Delete(userId string) error {
 	return err
 }
 
-func (s *JsonPlugin) Close() error {
+func (s *JsonPlugin) Close() (*plugin.Stats, error) {
 	switch s.op {
 	case plugin.OperationTypeWrite, plugin.OperationTypeDelete:
 		{
@@ -137,27 +137,27 @@ func (s *JsonPlugin) Close() error {
 				for _, user := range s.apiUsers {
 					err := s.Write(user)
 					if err != nil {
-						return err
+						return nil, err
 					}
 				}
 			}
 			_, err := s.users.Write([]byte("\n]\n"))
 			if err != nil {
-				return err
+				return nil, err
 			}
 			f, err := os.Create(s.Config.File)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			w := bufio.NewWriter(f)
 			_, err = s.users.WriteTo(w)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			w.Flush()
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 func (s *JsonPlugin) readAll() error {
