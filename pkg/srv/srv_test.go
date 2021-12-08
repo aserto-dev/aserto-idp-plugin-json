@@ -208,7 +208,8 @@ func TestDelete(t *testing.T) {
 	err = JSONplugin.Delete("dfdadc39-7335-404d-af66-c77cf13a15f8")
 	assert.Nil(err)
 
-	err = JSONplugin.Close()
+	stats, err := JSONplugin.Close()
+	assert.Nil(stats)
 	assert.Nil(err)
 	containDeleted, err = FileContainsString(copyFilePath, "deleted")
 	assert.Nil(err)
@@ -242,7 +243,8 @@ func TestWrite(t *testing.T) {
 	err = JSONplugin.Write(apiUser)
 	assert.Nil(err)
 
-	err = JSONplugin.Close()
+	stats, err := JSONplugin.Close()
+	assert.Nil(stats)
 	assert.Nil(err)
 
 	assert.True(FileExists(filePath))

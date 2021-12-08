@@ -1,4 +1,4 @@
-// +build mage
+//go:build mage
 
 package main
 
@@ -19,7 +19,7 @@ import (
 
 func init() {
 	// Set go version for docker builds
-	os.Setenv("GO_VERSION", "1.16")
+	os.Setenv("GO_VERSION", "1.17")
 	// Set private repositories
 	os.Setenv("GOPRIVATE", "github.com/aserto-dev")
 }
@@ -28,7 +28,7 @@ var (
 	oras         = deps.BinDep("oras")
 	mediaType    = ":application/vnd.unknown.layer.v1+txt"
 	execLocation = filepath.Join("dist", "aserto-idp-plugin-json_")
-	ghName       = "ghcr.io/aserto-dev/aserto-idp-plugin_"
+	ghName       = "ghcr.io/aserto-dev/aserto-idp-plugins_"
 	osMap        = map[string][]string{
 		"linux":   {"arm64", "amd64"},
 		"darwin":  {"arm64", "amd64"},
