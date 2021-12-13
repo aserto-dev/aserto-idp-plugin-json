@@ -43,6 +43,10 @@ func (s *JsonPlugin) GetConfig() plugin.PluginConfig {
 	return &JsonPluginConfig{}
 }
 
+func (s *JsonPlugin) GetVersion() (string, string, string) {
+	return GetVersion()
+}
+
 func (s *JsonPlugin) Open(cfg plugin.PluginConfig, operation plugin.OperationType) error {
 	config, ok := cfg.(*JsonPluginConfig)
 	if !ok {
