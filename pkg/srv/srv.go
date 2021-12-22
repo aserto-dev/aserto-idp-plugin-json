@@ -63,7 +63,7 @@ func (s *JsonPlugin) Open(cfg plugin.PluginConfig, operation plugin.OperationTyp
 		}
 	case plugin.OperationTypeRead, plugin.OperationTypeDelete:
 		{
-			file, err := os.Open(s.Config.File)
+			file, err := os.Open(s.Config.FromFile)
 			if err != nil {
 				return err
 			}
@@ -134,7 +134,9 @@ func (s *JsonPlugin) Close() (*plugin.Stats, error) {
 	switch s.op {
 	case plugin.OperationTypeWrite, plugin.OperationTypeDelete:
 		{
+			file := s.Config.ToFile
 			if s.op == plugin.OperationTypeDelete {
+				file = s.Config.FromFile
 				s.users.Reset()
 				s.users.Write([]byte("[\n"))
 
@@ -149,7 +151,7 @@ func (s *JsonPlugin) Close() (*plugin.Stats, error) {
 			if err != nil {
 				return nil, err
 			}
-			f, err := os.Create(s.Config.File)
+			f, err := os.Create(file)
 			if err != nil {
 				return nil, err
 			}
