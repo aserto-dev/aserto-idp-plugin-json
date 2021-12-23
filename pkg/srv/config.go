@@ -23,8 +23,8 @@ func GetVersion() (string, string, string) {
 }
 
 type JsonPluginConfig struct {
-	FromFile string `description:"Json file path to read or delete from" kind:"attribute" mode:"normal" readonly:"false"`
-	ToFile   string `description:"Json file path to write to" kind:"attribute" mode:"normal" readonly:"false"`
+	FromFile string `description:"Json file path to read or delete from" kind:"attribute" mode:"normal" readonly:"false" name:"from_file"`
+	ToFile   string `description:"Json file path to write to" kind:"attribute" mode:"normal" readonly:"false" name:"to_file"`
 }
 
 func (c *JsonPluginConfig) Validate(operation plugin.OperationType) error {
