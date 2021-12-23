@@ -63,7 +63,7 @@ func TestOpenForRead(t *testing.T) {
 	filePath := filepath.Dir(currentDir)
 	filePath = filepath.Join(filePath, "testing", "user.json")
 	config := JsonPluginConfig{
-		File: filePath,
+		FromFile: filePath,
 	}
 	JSONplugin := NewJsonPlugin()
 
@@ -81,7 +81,7 @@ func TestOpenForReadWithInvalidJson(t *testing.T) {
 	filePath := filepath.Dir(currentDir)
 	filePath = filepath.Join(filePath, "testing", "invalid.json")
 	config := JsonPluginConfig{
-		File: filePath,
+		FromFile: filePath,
 	}
 	JSONplugin := NewJsonPlugin()
 
@@ -95,7 +95,7 @@ func TestOpenForReadWithInexistingFile(t *testing.T) {
 	assert := require.New(t)
 
 	config := JsonPluginConfig{
-		File: "test.json",
+		FromFile: "test.json",
 	}
 	JSONplugin := NewJsonPlugin()
 
@@ -109,7 +109,7 @@ func TestOpenForWriteInexistingFile(t *testing.T) {
 	assert := require.New(t)
 
 	config := JsonPluginConfig{
-		File: "test.json",
+		ToFile: "test.json",
 	}
 	JSONplugin := NewJsonPlugin()
 
@@ -126,7 +126,7 @@ func TestReadTwoUsers(t *testing.T) {
 	filePath := filepath.Dir(currentDir)
 	filePath = filepath.Join(filePath, "testing", "user.json")
 	config := JsonPluginConfig{
-		File: filePath,
+		FromFile: filePath,
 	}
 	JSONplugin := NewJsonPlugin()
 
@@ -155,7 +155,7 @@ func TestReadInvalidApiUser(t *testing.T) {
 	filePath := filepath.Dir(currentDir)
 	filePath = filepath.Join(filePath, "testing", "invalid-user.json")
 	config := JsonPluginConfig{
-		File: filePath,
+		FromFile: filePath,
 	}
 	JSONplugin := NewJsonPlugin()
 
@@ -198,7 +198,7 @@ func TestDelete(t *testing.T) {
 	assert.False(containDeleted)
 
 	config := JsonPluginConfig{
-		File: copyFilePath,
+		FromFile: copyFilePath,
 	}
 	JSONplugin := NewJsonPlugin()
 
@@ -231,7 +231,7 @@ func TestWrite(t *testing.T) {
 	assert.False(FileExists(filePath))
 
 	config := JsonPluginConfig{
-		File: filePath,
+		ToFile: filePath,
 	}
 	JSONplugin := NewJsonPlugin()
 

@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 
 	fileaccess "github.com/aserto-dev/aserto-idp-plugin-json/pkg/file-access"
+	"github.com/aserto-dev/idp-plugin-sdk/plugin"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -21,40 +23,41 @@ func GetVersion() (string, string, string) {
 }
 
 type JsonPluginConfig struct {
-	File string `description:"Json file path" kind:"attribute" mode:"normal" readonly:"false"`
+	FromFile string `description:"Json file path to read or delete from" kind:"attribute" mode:"normal" readonly:"false"`
+	ToFile   string `description:"Json file path to write to" kind:"attribute" mode:"normal" readonly:"false"`
 }
 
-func (c *JsonPluginConfig) Validate() error {
+func (c *JsonPluginConfig) Validate(operation plugin.OperationType) error {
 
-	if c.File == "" {
-		return status.Error(codes.InvalidArgument, "no json file name was provided")
-	}
-
-	// check if file already exists
-	path, err := os.Stat(c.File)
-
-	if err != nil {
-
-		dir := filepath.Dir(c.File)
-
-		info, err := os.Stat(dir)
-		if err != nil {
-			return status.Error(codes.NotFound, err.Error())
+	switch operation {
+	case plugin.OperationTypeWrite:
+		// TODO accept stdout
+		if c.ToFile == "" {
+			return status.Error(codes.InvalidArgument, "no json file 'to_file' name was provided")
 		}
-
-		if !info.IsDir() {
-			return status.Errorf(codes.InvalidArgument, "%s is not a directory", dir)
-		}
-
-		err = fileaccess.WriteAccess(info, dir)
+		err := validateWrite(c.ToFile)
 		if err != nil {
-			return status.Errorf(codes.PermissionDenied, "cannot access %s", dir)
+			return err
 		}
-
-	} else {
-		err = fileaccess.WriteAccess(path, c.File)
+	case plugin.OperationTypeRead:
+		if c.FromFile == "" {
+			return status.Error(codes.InvalidArgument, "no json file 'from_file' name was provided")
+		}
+		err := validateRead(c.FromFile)
 		if err != nil {
-			return status.Errorf(codes.PermissionDenied, "cannot access %s", c.File)
+			return err
+		}
+	case plugin.OperationTypeDelete:
+		if c.FromFile == "" {
+			return status.Error(codes.InvalidArgument, "no json file 'from_file' name was provided")
+		}
+		err := validateRead(c.FromFile)
+		if err != nil {
+			return err
+		}
+		err = validateWrite(c.FromFile)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -63,4 +66,52 @@ func (c *JsonPluginConfig) Validate() error {
 
 func (c *JsonPluginConfig) Description() string {
 	return "JSON plugin"
+}
+
+func validateRead(file string) error {
+	path, err := os.Stat(file)
+
+	if err != nil {
+		return errors.Wrapf(err, "'%s' file doesn't exists", file)
+	}
+
+	err = fileaccess.ReadAccess(path, file)
+	if err != nil {
+		return status.Errorf(codes.PermissionDenied, "cannot access '%s' for read", file)
+	}
+
+	return nil
+}
+
+func validateWrite(file string) error {
+
+	// check if file already exists
+	path, err := os.Stat(file)
+
+	if err != nil {
+
+		dir := filepath.Dir(file)
+
+		info, err := os.Stat(dir)
+		if err != nil {
+			return status.Error(codes.NotFound, err.Error())
+		}
+
+		if !info.IsDir() {
+			return status.Errorf(codes.InvalidArgument, "'%s' is not a directory", dir)
+		}
+
+		err = fileaccess.WriteAccess(info, dir)
+		if err != nil {
+			return status.Errorf(codes.PermissionDenied, "cannot access '%s' for write", dir)
+		}
+
+	} else {
+		err = fileaccess.WriteAccess(path, file)
+		if err != nil {
+			return status.Errorf(codes.PermissionDenied, "cannot access '%s' for write", file)
+		}
+	}
+
+	return nil
 }
