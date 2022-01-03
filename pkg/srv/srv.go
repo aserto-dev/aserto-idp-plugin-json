@@ -151,11 +151,17 @@ func (s *JsonPlugin) Close() (*plugin.Stats, error) {
 			if err != nil {
 				return nil, err
 			}
-			f, err := os.Create(file)
-			if err != nil {
-				return nil, err
+			var w *bufio.Writer
+			if file == "stdout" {
+				w = bufio.NewWriter(os.Stdout)
+			} else {
+				f, err := os.Create(file)
+				if err != nil {
+					return nil, err
+				}
+				w = bufio.NewWriter(f)
 			}
-			w := bufio.NewWriter(f)
+
 			_, err = s.users.WriteTo(w)
 			if err != nil {
 				return nil, err
