@@ -7,14 +7,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 
 	"github.com/aserto-dev/mage-loot/buf"
 	"github.com/aserto-dev/mage-loot/common"
 	"github.com/aserto-dev/mage-loot/deps"
 	"github.com/aserto-dev/sver/pkg/sver"
 	"github.com/magefile/mage/mg"
-	"github.com/magefile/mage/sh"
 )
 
 func init() {
@@ -96,10 +94,6 @@ func Test() error {
 func All() error {
 	mg.SerialDeps(Deps, Generate, Lint, Test, Build)
 	return nil
-}
-
-func Run() error {
-	return sh.RunV("./bin/" + runtime.GOOS + "-" + runtime.GOARCH + "/aserto-idp")
 }
 
 func Publish() error {

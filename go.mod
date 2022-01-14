@@ -8,7 +8,7 @@ require (
 	github.com/aserto-dev/mage-loot v0.4.16
 	github.com/aserto-dev/sver v1.3.9
 	github.com/hashicorp/go-multierror v1.0.0
-	github.com/magefile/mage v1.12.0
+	github.com/magefile/mage v1.12.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881
