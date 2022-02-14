@@ -7,12 +7,14 @@ import (
 	"errors"
 	"io"
 	"os"
+	"time"
 
 	api "github.com/aserto-dev/go-grpc/aserto/api/v1"
 	"github.com/aserto-dev/idp-plugin-sdk/pb"
 	"github.com/aserto-dev/idp-plugin-sdk/plugin"
 	"github.com/hashicorp/go-multierror"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var jsonOptions = protojson.MarshalOptions{
@@ -124,6 +126,7 @@ func (s *JsonPlugin) Delete(userId string) error {
 	for _, user := range s.apiUsers {
 		if user.Id == userId {
 			user.Deleted = true
+			user.Metadata.DeletedAt = timestamppb.New(time.Now())
 		}
 	}
 
