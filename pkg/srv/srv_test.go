@@ -197,6 +197,10 @@ func TestDelete(t *testing.T) {
 	assert.Nil(err)
 	assert.False(containDeleted)
 
+	containDeletedAt, err := FileContainsString(copyFilePath, "deleted_at")
+	assert.Nil(err)
+	assert.False(containDeletedAt)
+
 	config := JsonPluginConfig{
 		FromFile: copyFilePath,
 	}
@@ -214,6 +218,10 @@ func TestDelete(t *testing.T) {
 	containDeleted, err = FileContainsString(copyFilePath, "deleted")
 	assert.Nil(err)
 	assert.True(containDeleted)
+
+	containDeletedAt, err = FileContainsString(copyFilePath, "deleted_at")
+	assert.Nil(err)
+	assert.True(containDeletedAt)
 
 	err = os.Remove(copyFilePath)
 	assert.Nil(err)
