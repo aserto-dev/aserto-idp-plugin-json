@@ -22,12 +22,12 @@ func GetVersion() (string, string, string) {
 	return ver, date, commit
 }
 
-type JsonPluginConfig struct {
+type JSONPluginConfig struct {
 	FromFile string `description:"Json file path to read or delete from" kind:"attribute" mode:"normal" readonly:"false" name:"from-file"`
 	ToFile   string `description:"Json file path to write to" kind:"attribute" mode:"normal" readonly:"false" name:"to-file"`
 }
 
-func (c *JsonPluginConfig) Validate(operation plugin.OperationType) error {
+func (c *JSONPluginConfig) Validate(operation plugin.OperationType) error {
 
 	switch operation {
 	case plugin.OperationTypeWrite:
@@ -64,7 +64,7 @@ func (c *JsonPluginConfig) Validate(operation plugin.OperationType) error {
 	return nil
 }
 
-func (c *JsonPluginConfig) Description() string {
+func (c *JSONPluginConfig) Description() string {
 	return "JSON plugin"
 }
 
