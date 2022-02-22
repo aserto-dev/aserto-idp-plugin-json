@@ -26,8 +26,8 @@ var jsonOptions = protojson.MarshalOptions{
 	EmitUnpopulated: false,
 }
 
-type JsonPlugin struct {
-	Config   *JsonPluginConfig
+type JSONPlugin struct {
+	Config   *JSONPluginConfig
 	decoder  *json.Decoder
 	users    bytes.Buffer
 	op       plugin.OperationType
@@ -35,22 +35,22 @@ type JsonPlugin struct {
 	count    int
 }
 
-func NewJsonPlugin() *JsonPlugin {
-	return &JsonPlugin{
-		Config: &JsonPluginConfig{},
+func NewJSONPlugin() *JSONPlugin {
+	return &JSONPlugin{
+		Config: &JSONPluginConfig{},
 	}
 }
 
-func (s *JsonPlugin) GetConfig() plugin.PluginConfig {
-	return &JsonPluginConfig{}
+func (s *JSONPlugin) GetConfig() plugin.PluginConfig {
+	return &JSONPluginConfig{}
 }
 
-func (s *JsonPlugin) GetVersion() (string, string, string) {
+func (s *JSONPlugin) GetVersion() (string, string, string) {
 	return GetVersion()
 }
 
-func (s *JsonPlugin) Open(cfg plugin.PluginConfig, operation plugin.OperationType) error {
-	config, ok := cfg.(*JsonPluginConfig)
+func (s *JSONPlugin) Open(cfg plugin.PluginConfig, operation plugin.OperationType) error {
+	config, ok := cfg.(*JSONPluginConfig)
 	if !ok {
 		return errors.New("invalid config")
 	}
@@ -60,29 +60,27 @@ func (s *JsonPlugin) Open(cfg plugin.PluginConfig, operation plugin.OperationTyp
 	s.op = operation
 	switch operation {
 	case plugin.OperationTypeWrite:
-		{
-			s.users.Write([]byte("[\n"))
-		}
+
+		s.users.Write([]byte("[\n"))
+
 	case plugin.OperationTypeRead, plugin.OperationTypeDelete:
-		{
-			file, err := os.Open(s.Config.FromFile)
-			if err != nil {
-				return err
-			}
 
-			s.decoder = json.NewDecoder(file)
+		file, err := os.Open(s.Config.FromFile)
+		if err != nil {
+			return err
+		}
 
-			if _, err = s.decoder.Token(); err != nil {
-				return err
-			}
+		s.decoder = json.NewDecoder(file)
 
+		if _, err = s.decoder.Token(); err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-func (s *JsonPlugin) Read() ([]*api.User, error) {
+func (s *JSONPlugin) Read() ([]*api.User, error) {
 	if s.decoder.More() {
 		u := api.User{}
 		if err := pb.UnmarshalNext(s.decoder, &u); err != nil {
@@ -90,16 +88,15 @@ func (s *JsonPlugin) Read() ([]*api.User, error) {
 		}
 
 		return []*api.User{&u}, nil
-	} else {
-		if _, err := s.decoder.Token(); err != nil {
-			return nil, err
-		}
-
-		return nil, io.EOF
 	}
+	if _, err := s.decoder.Token(); err != nil {
+		return nil, err
+	}
+
+	return nil, io.EOF
 }
 
-func (s *JsonPlugin) Write(user *api.User) error {
+func (s *JSONPlugin) Write(user *api.User) error {
 	if s.count != 0 {
 		_, _ = s.users.Write([]byte(",\n"))
 	}
@@ -116,7 +113,7 @@ func (s *JsonPlugin) Write(user *api.User) error {
 	return nil
 }
 
-func (s *JsonPlugin) Delete(userId string) error {
+func (s *JSONPlugin) Delete(userID string) error {
 
 	var err error
 	if len(s.apiUsers) == 0 {
@@ -124,7 +121,7 @@ func (s *JsonPlugin) Delete(userId string) error {
 	}
 
 	for _, user := range s.apiUsers {
-		if user.Id == userId {
+		if user.Id == userID {
 			user.Deleted = true
 			user.Metadata.DeletedAt = timestamppb.New(time.Now())
 		}
@@ -133,43 +130,42 @@ func (s *JsonPlugin) Delete(userId string) error {
 	return err
 }
 
-func (s *JsonPlugin) Close() (*plugin.Stats, error) {
+func (s *JSONPlugin) Close() (*plugin.Stats, error) {
 	switch s.op {
 	case plugin.OperationTypeWrite, plugin.OperationTypeDelete:
-		{
-			file := s.Config.ToFile
-			if s.op == plugin.OperationTypeDelete {
-				file = s.Config.FromFile
-				s.users.Reset()
-				s.users.Write([]byte("[\n"))
 
-				for _, user := range s.apiUsers {
-					err := s.Write(user)
-					if err != nil {
-						return nil, err
-					}
+		file := s.Config.ToFile
+		if s.op == plugin.OperationTypeDelete {
+			file = s.Config.FromFile
+			s.users.Reset()
+			s.users.Write([]byte("[\n"))
+
+			for _, user := range s.apiUsers {
+				err := s.Write(user)
+				if err != nil {
+					return nil, err
 				}
 			}
-			_, err := s.users.Write([]byte("\n]\n"))
-			if err != nil {
-				return nil, err
-			}
-			f, err := os.Create(file)
-			if err != nil {
-				return nil, err
-			}
-			w := bufio.NewWriter(f)
-			_, err = s.users.WriteTo(w)
-			if err != nil {
-				return nil, err
-			}
-			w.Flush()
 		}
+		_, err := s.users.Write([]byte("\n]\n"))
+		if err != nil {
+			return nil, err
+		}
+		f, err := os.Create(file)
+		if err != nil {
+			return nil, err
+		}
+		w := bufio.NewWriter(f)
+		_, err = s.users.WriteTo(w)
+		if err != nil {
+			return nil, err
+		}
+		w.Flush()
 	}
 	return nil, nil
 }
 
-func (s *JsonPlugin) readAll() error {
+func (s *JSONPlugin) readAll() error {
 	var errs error
 	users, err := s.Read()
 	for err != io.EOF {
