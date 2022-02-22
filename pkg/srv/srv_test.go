@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aserto-dev/aserto-idp-plugin-json/pkg/config"
 	api "github.com/aserto-dev/go-grpc/aserto/api/v1"
 	"github.com/aserto-dev/idp-plugin-sdk/plugin"
 	"github.com/stretchr/testify/require"
@@ -61,12 +62,12 @@ func TestOpenForRead(t *testing.T) {
 
 	filePath := filepath.Dir(currentDir)
 	filePath = filepath.Join(filePath, "testing", "user.json")
-	config := JSONPluginConfig{
+	conf := config.JSONPluginConfig{
 		FromFile: filePath,
 	}
 	JSONplugin := NewJSONPlugin()
 
-	err = JSONplugin.Open(&config, plugin.OperationTypeRead)
+	err = JSONplugin.Open(&conf, plugin.OperationTypeRead)
 	assert.Nil(err)
 	assert.NotNil(JSONplugin.decoder, "the decoder shouldn't be nil")
 }
@@ -79,12 +80,12 @@ func TestOpenForReadWithInvalidJson(t *testing.T) {
 
 	filePath := filepath.Dir(currentDir)
 	filePath = filepath.Join(filePath, "testing", "invalid.json")
-	config := JSONPluginConfig{
+	conf := config.JSONPluginConfig{
 		FromFile: filePath,
 	}
 	JSONplugin := NewJSONPlugin()
 
-	err = JSONplugin.Open(&config, plugin.OperationTypeRead)
+	err = JSONplugin.Open(&conf, plugin.OperationTypeRead)
 	assert.NotNil(err)
 	r := regexp.MustCompile("invalid character .* looking for beginning of value")
 	assert.Regexp(r, err.Error())
@@ -93,12 +94,12 @@ func TestOpenForReadWithInvalidJson(t *testing.T) {
 func TestOpenForReadWithInexistingFile(t *testing.T) {
 	assert := require.New(t)
 
-	config := JSONPluginConfig{
+	conf := config.JSONPluginConfig{
 		FromFile: "test.json",
 	}
 	JSONplugin := NewJSONPlugin()
 
-	err := JSONplugin.Open(&config, plugin.OperationTypeRead)
+	err := JSONplugin.Open(&conf, plugin.OperationTypeRead)
 	assert.NotNil(err)
 	r := regexp.MustCompile("open test.json: no such file or directory")
 	assert.Regexp(r, err.Error())
@@ -107,12 +108,12 @@ func TestOpenForReadWithInexistingFile(t *testing.T) {
 func TestOpenForWriteInexistingFile(t *testing.T) {
 	assert := require.New(t)
 
-	config := JSONPluginConfig{
+	conf := config.JSONPluginConfig{
 		ToFile: "test.json",
 	}
 	JSONplugin := NewJSONPlugin()
 
-	err := JSONplugin.Open(&config, plugin.OperationTypeWrite)
+	err := JSONplugin.Open(&conf, plugin.OperationTypeWrite)
 	assert.Nil(err)
 }
 
@@ -124,12 +125,12 @@ func TestReadTwoUsers(t *testing.T) {
 
 	filePath := filepath.Dir(currentDir)
 	filePath = filepath.Join(filePath, "testing", "user.json")
-	config := JSONPluginConfig{
+	conf := config.JSONPluginConfig{
 		FromFile: filePath,
 	}
 	JSONplugin := NewJSONPlugin()
 
-	err = JSONplugin.Open(&config, plugin.OperationTypeRead)
+	err = JSONplugin.Open(&conf, plugin.OperationTypeRead)
 	assert.Nil(err)
 
 	user, err := JSONplugin.Read()
@@ -153,12 +154,12 @@ func TestReadInvalidApiUser(t *testing.T) {
 
 	filePath := filepath.Dir(currentDir)
 	filePath = filepath.Join(filePath, "testing", "invalid-user.json")
-	config := JSONPluginConfig{
+	conf := config.JSONPluginConfig{
 		FromFile: filePath,
 	}
 	JSONplugin := NewJSONPlugin()
 
-	err = JSONplugin.Open(&config, plugin.OperationTypeRead)
+	err = JSONplugin.Open(&conf, plugin.OperationTypeRead)
 	assert.Nil(err)
 
 	_, err = JSONplugin.Read()
@@ -200,12 +201,12 @@ func TestDelete(t *testing.T) {
 	assert.Nil(err)
 	assert.False(containDeletedAt)
 
-	config := JSONPluginConfig{
+	conf := config.JSONPluginConfig{
 		FromFile: copyFilePath,
 	}
 	JSONplugin := NewJSONPlugin()
 
-	err = JSONplugin.Open(&config, plugin.OperationTypeDelete)
+	err = JSONplugin.Open(&conf, plugin.OperationTypeDelete)
 	assert.Nil(err)
 
 	err = JSONplugin.Delete("dfdadc39-7335-404d-af66-c77cf13a15f8")
@@ -237,14 +238,14 @@ func TestWrite(t *testing.T) {
 
 	assert.False(FileExists(filePath))
 
-	config := JSONPluginConfig{
+	conf := config.JSONPluginConfig{
 		ToFile: filePath,
 	}
 	JSONplugin := NewJSONPlugin()
 
 	apiUser := CreateTestAPIUser("1", "Test Name", "test@email.com")
 
-	err = JSONplugin.Open(&config, plugin.OperationTypeWrite)
+	err = JSONplugin.Open(&conf, plugin.OperationTypeWrite)
 	assert.Nil(err)
 
 	err = JSONplugin.Write(apiUser)
