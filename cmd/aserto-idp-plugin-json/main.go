@@ -9,8 +9,8 @@ import (
 
 func main() {
 
-	options := &plugin.PluginOptions{
-		PluginHandler: &srv.JSONPlugin{},
+	options := &plugin.Options{
+		Handler: &srv.JSONPlugin{},
 	}
 
 	err := plugin.Serve(options)

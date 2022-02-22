@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/aserto-dev/aserto-idp-plugin-json/pkg/config"
 	api "github.com/aserto-dev/go-grpc/aserto/api/v1"
 	"github.com/aserto-dev/idp-plugin-sdk/pb"
 	"github.com/aserto-dev/idp-plugin-sdk/plugin"
@@ -27,7 +28,7 @@ var jsonOptions = protojson.MarshalOptions{
 }
 
 type JSONPlugin struct {
-	Config   *JSONPluginConfig
+	Config   *config.JSONPluginConfig
 	decoder  *json.Decoder
 	users    bytes.Buffer
 	op       plugin.OperationType
@@ -37,24 +38,24 @@ type JSONPlugin struct {
 
 func NewJSONPlugin() *JSONPlugin {
 	return &JSONPlugin{
-		Config: &JSONPluginConfig{},
+		Config: &config.JSONPluginConfig{},
 	}
 }
 
-func (s *JSONPlugin) GetConfig() plugin.PluginConfig {
-	return &JSONPluginConfig{}
+func (s *JSONPlugin) GetConfig() plugin.Config {
+	return &config.JSONPluginConfig{}
 }
 
 func (s *JSONPlugin) GetVersion() (string, string, string) {
-	return GetVersion()
+	return config.GetVersion()
 }
 
-func (s *JSONPlugin) Open(cfg plugin.PluginConfig, operation plugin.OperationType) error {
-	config, ok := cfg.(*JSONPluginConfig)
+func (s *JSONPlugin) Open(cfg plugin.Config, operation plugin.OperationType) error {
+	conf, ok := cfg.(*config.JSONPluginConfig)
 	if !ok {
 		return errors.New("invalid config")
 	}
-	s.Config = config
+	s.Config = conf
 	s.count = 0
 
 	s.op = operation
