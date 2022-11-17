@@ -1,4 +1,4 @@
-package srv
+package srv_test
 
 import (
 	"io"
@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aserto-dev/aserto-idp-plugin-json/pkg/config"
+	"github.com/aserto-dev/aserto-idp-plugin-json/pkg/srv"
 	api "github.com/aserto-dev/go-grpc/aserto/api/v1"
 	"github.com/aserto-dev/idp-plugin-sdk/plugin"
 	"github.com/stretchr/testify/require"
@@ -65,11 +66,10 @@ func TestOpenForRead(t *testing.T) {
 	conf := config.JSONPluginConfig{
 		FromFile: filePath,
 	}
-	JSONplugin := NewJSONPlugin()
+	JSONplugin := srv.NewJSONPlugin()
 
 	err = JSONplugin.Open(&conf, plugin.OperationTypeRead)
 	assert.Nil(err)
-	assert.NotNil(JSONplugin.decoder, "the decoder shouldn't be nil")
 }
 
 func TestOpenForReadWithInvalidJson(t *testing.T) {
@@ -83,7 +83,7 @@ func TestOpenForReadWithInvalidJson(t *testing.T) {
 	conf := config.JSONPluginConfig{
 		FromFile: filePath,
 	}
-	JSONplugin := NewJSONPlugin()
+	JSONplugin := srv.NewJSONPlugin()
 
 	err = JSONplugin.Open(&conf, plugin.OperationTypeRead)
 	assert.NotNil(err)
@@ -97,7 +97,7 @@ func TestOpenForReadWithInexistingFile(t *testing.T) {
 	conf := config.JSONPluginConfig{
 		FromFile: "test.json",
 	}
-	JSONplugin := NewJSONPlugin()
+	JSONplugin := srv.NewJSONPlugin()
 
 	err := JSONplugin.Open(&conf, plugin.OperationTypeRead)
 	assert.NotNil(err)
@@ -111,7 +111,7 @@ func TestOpenForWriteInexistingFile(t *testing.T) {
 	conf := config.JSONPluginConfig{
 		ToFile: "test.json",
 	}
-	JSONplugin := NewJSONPlugin()
+	JSONplugin := srv.NewJSONPlugin()
 
 	err := JSONplugin.Open(&conf, plugin.OperationTypeWrite)
 	assert.Nil(err)
@@ -128,7 +128,7 @@ func TestReadTwoUsers(t *testing.T) {
 	conf := config.JSONPluginConfig{
 		FromFile: filePath,
 	}
-	JSONplugin := NewJSONPlugin()
+	JSONplugin := srv.NewJSONPlugin()
 
 	err = JSONplugin.Open(&conf, plugin.OperationTypeRead)
 	assert.Nil(err)
@@ -157,7 +157,7 @@ func TestReadInvalidApiUser(t *testing.T) {
 	conf := config.JSONPluginConfig{
 		FromFile: filePath,
 	}
-	JSONplugin := NewJSONPlugin()
+	JSONplugin := srv.NewJSONPlugin()
 
 	err = JSONplugin.Open(&conf, plugin.OperationTypeRead)
 	assert.Nil(err)
@@ -204,7 +204,7 @@ func TestDelete(t *testing.T) {
 	conf := config.JSONPluginConfig{
 		FromFile: copyFilePath,
 	}
-	JSONplugin := NewJSONPlugin()
+	JSONplugin := srv.NewJSONPlugin()
 
 	err = JSONplugin.Open(&conf, plugin.OperationTypeDelete)
 	assert.Nil(err)
@@ -241,7 +241,7 @@ func TestWrite(t *testing.T) {
 	conf := config.JSONPluginConfig{
 		ToFile: filePath,
 	}
-	JSONplugin := NewJSONPlugin()
+	JSONplugin := srv.NewJSONPlugin()
 
 	apiUser := CreateTestAPIUser("1", "Test Name", "test@email.com")
 

@@ -162,6 +162,8 @@ func (s *JSONPlugin) Close() (*plugin.Stats, error) {
 			return nil, err
 		}
 		w.Flush()
+	case plugin.OperationTypeRead:
+	default:
 	}
 	return nil, nil
 }
