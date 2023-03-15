@@ -132,7 +132,7 @@ func (s *JSONPlugin) Delete(userID string) error {
 }
 
 func (s *JSONPlugin) Close() (*plugin.Stats, error) {
-	switch s.op {
+	switch s.op { //nolint:exhaustive
 	case plugin.OperationTypeWrite, plugin.OperationTypeDelete:
 
 		file := s.Config.ToFile

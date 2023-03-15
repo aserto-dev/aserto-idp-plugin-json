@@ -1,0 +1,18 @@
+{
+    "cSpell.words": [
+        "aserto",
+        "goarch",
+        "gochecknoglobals",
+        "golangci",
+        "goreleaser",
+        "gosec",
+        "gotest",
+        "gotestsum",
+        "ldflag",
+        "ldflags",
+        "nolint",
+        "oras",
+        "stretchr",
+        "sver"
+    ]
+}
