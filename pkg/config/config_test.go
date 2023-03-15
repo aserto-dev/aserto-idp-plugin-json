@@ -1,4 +1,4 @@
-package config
+package config_test
 
 import (
 	"os"
@@ -6,16 +6,17 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aserto-dev/aserto-idp-plugin-json/pkg/config"
 	"github.com/aserto-dev/idp-plugin-sdk/plugin"
 	"github.com/stretchr/testify/require"
 )
 
 func TestValidateWriteWithEmptyFileName(t *testing.T) {
 	assert := require.New(t)
-	config := JSONPluginConfig{
+	cfg := config.JSONPluginConfig{
 		ToFile: "",
 	}
-	err := config.Validate(plugin.OperationTypeWrite)
+	err := cfg.Validate(plugin.OperationTypeWrite)
 
 	assert.NotNil(err)
 	r := regexp.MustCompile("InvalidArgument desc = no json file 'to_file' name was provided")
@@ -24,10 +25,10 @@ func TestValidateWriteWithEmptyFileName(t *testing.T) {
 
 func TestValidateReadWithEmptyFileName(t *testing.T) {
 	assert := require.New(t)
-	config := JSONPluginConfig{
+	cfg := config.JSONPluginConfig{
 		FromFile: "",
 	}
-	err := config.Validate(plugin.OperationTypeRead)
+	err := cfg.Validate(plugin.OperationTypeRead)
 
 	assert.NotNil(err)
 	r := regexp.MustCompile("InvalidArgument desc = no json file 'from_file' name was provided")
@@ -36,11 +37,11 @@ func TestValidateReadWithEmptyFileName(t *testing.T) {
 
 func TestValidateDeleteWithEmptyFileName(t *testing.T) {
 	assert := require.New(t)
-	config := JSONPluginConfig{
+	cfg := config.JSONPluginConfig{
 		FromFile: "",
 		ToFile:   "test.txt",
 	}
-	err := config.Validate(plugin.OperationTypeDelete)
+	err := cfg.Validate(plugin.OperationTypeDelete)
 
 	assert.NotNil(err)
 	r := regexp.MustCompile("InvalidArgument desc = no json file 'from_file' name was provided")
@@ -49,20 +50,20 @@ func TestValidateDeleteWithEmptyFileName(t *testing.T) {
 
 func TestValidateWriteWithInexistentFileName(t *testing.T) {
 	assert := require.New(t)
-	config := JSONPluginConfig{
+	cfg := config.JSONPluginConfig{
 		ToFile: "test",
 	}
-	err := config.Validate(plugin.OperationTypeWrite)
+	err := cfg.Validate(plugin.OperationTypeWrite)
 
 	assert.Nil(err)
 }
 
 func TestValidateReadWithInexistentFileName(t *testing.T) {
 	assert := require.New(t)
-	config := JSONPluginConfig{
+	cfg := config.JSONPluginConfig{
 		FromFile: "test",
 	}
-	err := config.Validate(plugin.OperationTypeRead)
+	err := cfg.Validate(plugin.OperationTypeRead)
 
 	assert.NotNil(err)
 	assert.Equal("'test' file doesn't exists: stat test: no such file or directory", err.Error())
@@ -70,10 +71,10 @@ func TestValidateReadWithInexistentFileName(t *testing.T) {
 
 func TestValidateWriteWithInvalidPathToFile(t *testing.T) {
 	assert := require.New(t)
-	config := JSONPluginConfig{
+	cfg := config.JSONPluginConfig{
 		ToFile: "testing/test.json",
 	}
-	err := config.Validate(plugin.OperationTypeWrite)
+	err := cfg.Validate(plugin.OperationTypeWrite)
 
 	assert.NotNil(err)
 	r := regexp.MustCompile("NotFound desc = stat testing: no such file or directory")
@@ -88,13 +89,13 @@ func TestValidateWriteWithInaccessibleExistingFile(t *testing.T) {
 
 	filePath := filepath.Dir(currentDir)
 	filePath = filepath.Join(filePath, "testing", "permission-denied.json")
-	err = os.WriteFile(filePath, []byte(""), 0444)
+	err = os.WriteFile(filePath, []byte(""), 0444) //nolint:gosec
 	assert.Nil(err)
 
-	config := JSONPluginConfig{
+	cfg := config.JSONPluginConfig{
 		ToFile: filePath,
 	}
-	err = config.Validate(plugin.OperationTypeWrite)
+	err = cfg.Validate(plugin.OperationTypeWrite)
 
 	assert.NotNil(err)
 	r := regexp.MustCompile(".*PermissionDenied desc = cannot access .*permission-denied.json")
@@ -112,13 +113,13 @@ func TestValidateReadWithInaccessibleExistingFile(t *testing.T) {
 
 	filePath := filepath.Dir(currentDir)
 	filePath = filepath.Join(filePath, "testing", "permission-denied.json")
-	err = os.WriteFile(filePath, []byte(""), 0222)
+	err = os.WriteFile(filePath, []byte(""), 0222) //nolint:gosec
 	assert.Nil(err)
 
-	config := JSONPluginConfig{
+	cfg := config.JSONPluginConfig{
 		FromFile: filePath,
 	}
-	err = config.Validate(plugin.OperationTypeRead)
+	err = cfg.Validate(plugin.OperationTypeRead)
 
 	assert.NotNil(err)
 	r := regexp.MustCompile(".*PermissionDenied desc = cannot access .*permission-denied.json")
@@ -137,10 +138,10 @@ func TestValidateWriteWithFileInInvalidPath(t *testing.T) {
 	filePath := filepath.Dir(currentDir)
 	filePath = filepath.Join(filePath, "testing", "invalid.json", "test.json")
 
-	config := JSONPluginConfig{
+	cfg := config.JSONPluginConfig{
 		ToFile: filePath,
 	}
-	err = config.Validate(plugin.OperationTypeWrite)
+	err = cfg.Validate(plugin.OperationTypeWrite)
 
 	assert.NotNil(err)
 	r := regexp.MustCompile("InvalidArgument desc = '.*invalid.json' is not a directory")
@@ -149,9 +150,9 @@ func TestValidateWriteWithFileInInvalidPath(t *testing.T) {
 
 func TestDescription(t *testing.T) {
 	assert := require.New(t)
-	config := JSONPluginConfig{}
+	cfg := config.JSONPluginConfig{}
 
-	description := config.Description()
+	description := cfg.Description()
 
 	assert.Equal("JSON plugin", description, "should return the description of the plugin")
 
